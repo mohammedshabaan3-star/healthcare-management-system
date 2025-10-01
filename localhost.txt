@@ -1,0 +1,4 @@
+localhost
+postgres
+M0h@med1183
+5432

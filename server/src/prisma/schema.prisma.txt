@@ -1,0 +1,148 @@
+// server/src/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Governorate {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(255)
+  districts District[]
+  hospitals Hospital[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model District {
+  id            Int      @id @default(autoincrement())
+  name          String   @db.VarChar(255)
+  governorate   Governorate @relation(fields: [governorateId], references: [id])
+  governorateId Int
+  hospitals     Hospital[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([name, governorateId])
+}
+
+model Hospital {
+  id                  Int       @id @default(autoincrement())
+  code                String    @unique @db.VarChar(50)
+  name                String    @db.VarChar(500)
+  governorate         Governorate? @relation(fields: [governorateId], references: [id])
+  governorateId       Int?
+  district            District? @relation(fields: [districtId], references: [id])
+  districtId          Int?
+  icuBeds             Int       @default(0)
+  pediatricBeds       Int       @default(0)
+  mediumCareBeds      Int       @default(0)
+  incubators          Int       @default(0)
+  newbornBeds         Int       @default(0)
+  attachments         String?   // يمكن تخزين كـ JSON string أو استخدام نموذج منفصل لاحقًا
+  users               User[]
+  patients            Patient[]
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([governorateId])
+  @@index([districtId])
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(255)
+  email        String    @unique @db.VarChar(255)
+  password     String    @db.VarChar(255) // سيتم تشفيرها
+  roles        String[]  // ["system_admin", "hospital_admin", "doctor", ...]
+  activeRole   String    @db.VarChar(50) // الدور النشط عند الدخول
+  hospital     Hospital? @relation(fields: [hospitalId], references: [id])
+  hospitalId   Int?
+  isActive     Boolean   @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([hospitalId])
+  @@index([activeRole])
+}
+model TransferRequest {
+  id            Int       @id @default(autoincrement())
+  patientId     Int
+  patient       Patient   @relation(fields: [patientId], references: [id])
+  fromHospital  String    @db.VarChar(500)
+  toHospital    String    @db.VarChar(500)
+  reason        String?   @db.Text
+  status        String    @default("pending") // pending, approved, rejected
+  notes         String?   @db.Text // ملاحظات الموافقة أو سبب الرفض
+  approvedBy    Int?      // ID المستخدم الذي وافق/رفض
+  approver      User?     @relation("Approver", fields: [approvedBy], references: [id])
+  requestedBy   Int?      // ID المستخدم الذي قدم الطلب
+  requester     User?     @relation("Requester", fields: [requestedBy], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@index([fromHospital])
+  @@index([toHospital])
+}
+
+// server/prisma/schema.prisma
+
+model Patient {
+  id                  Int       @id @default(autoincrement())
+  // البيانات الأساسية
+  reportNumber        String?   @db.VarChar(100) // رقم البلاغ
+  reportDate          DateTime?                // تاريخ البلاغ
+  reportTime          String?   @db.VarChar(10) // ساعة البلاغ
+  fullName            String    @db.VarChar(500) // اسم المريض ثلاثي
+  nationalId          String    @db.VarChar(14)  // الرقم القومي (14 رقمًا)
+  age                 Int?                     // يتم حسابه من الرقم القومي
+  gender              String?   @db.VarChar(10)  // ذكر / أنثى
+  governorate         String?   @db.VarChar(255) // المحافظة
+  address             String?   @db.VarChar(500) // محل الإقامة
+  phone1              String?   @db.VarChar(20)  // رقم التليفون 1
+  phone2              String?   @db.VarChar(20)  // رقم التليفون 2
+  
+  // بيانات الدخول والتحويل
+  referralSource      String?   @db.VarChar(500) // مصدر التحويل (اسم مستشفى)
+  hospitalId          Int?                     // المستشفى الحالي
+  hospital            Hospital? @relation(fields: [hospitalId], references: [id])
+  sameHospital        Boolean?                 // دخول نفس المستشفى
+  transferToOther     Boolean?                 // تحويل الى مستشفى أخرى
+  transferHospital    String?   @db.VarChar(500) // المستشفى المراد التحويل إليها
+  transferReason      String?   @db.VarChar(500) // سبب التحويل
+  directTransfer      Boolean?                 // طلب تحويل مباشر (يتطلب موافقة)
+  transferStatus      String?   @db.VarChar(50)  // pending, approved, rejected
+  
+  // البيانات الطبية
+  doctorName          String?   @db.VarChar(255) // اسم الطبيب
+  careType            String?   @db.VarChar(255) // نوع الرعاية المسكن عليها
+  admissionDate       DateTime?                // تاريخ الدخول
+  admissionTime       String?   @db.VarChar(10) // ساعة الدخول
+  apacheScore         Int?                     // APACHI ll Score
+  initialDiagnosis    String?                  // التشخيص المبدئي
+  additionalServices  String?                  // الخدمة الإضافية
+  vent                Boolean?                 // Vent
+  icuClass            String?   @db.VarChar(100) // ICU class
+  
+  // بيانات الخروج
+  finalDiagnosis      String?                  // التشخيص النهائي
+  dischargeStatus     String?   @db.VarChar(100) // الحالة عند الخروج
+  dischargeCriteria   String?   @db.VarChar(500) // Discharge criteria for ICU
+  dischargeReport     String?                  // تقرير الخروج / الوفاة
+  dischargeDate       DateTime?                // تاريخ الخروج
+  dischargeTime       String?   @db.VarChar(10) // ساعة الخروج
+  notes               String?                  // ملاحظات
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([nationalId])
+  @@index([reportNumber])
+  @@index([hospitalId])
+}

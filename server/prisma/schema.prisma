@@ -1,0 +1,219 @@
+// server/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Governorate {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(255)
+  districts District[]
+  hospitals Hospital[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model District {
+  id            Int      @id @default(autoincrement())
+  name          String   @db.VarChar(255)
+  governorate   Governorate @relation(fields: [governorateId], references: [id])
+  governorateId Int
+  hospitals     Hospital[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([name, governorateId])
+}
+
+model Hospital {
+  id                  Int       @id @default(autoincrement())
+  code                String?   @unique @db.VarChar(50)  // يمكن أن يكون فارغاً أثناء الإدخال من Excel
+  name                String    @db.VarChar(500)
+  governorate         Governorate? @relation(fields: [governorateId], references: [id])
+  governorateId       Int?
+  district            District? @relation(fields: [districtId], references: [id])
+  districtId          Int?
+  icuBeds             Int       @default(0)
+  pediatricBeds       Int       @default(0)
+  mediumCareBeds      Int       @default(0)
+  incubators          Int       @default(0)
+  newbornBeds         Int       @default(0)
+  beds                Int       @default(0) // يجمع كل الأسرة
+  attachments         String?
+  users               User[]
+  patients            Patient[]
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([governorateId])
+  @@index([districtId])
+}
+
+model User {
+  id                Int             @id @default(autoincrement())
+  name              String          @db.VarChar(255)
+  email             String          @unique @db.VarChar(255)
+  password          String          @db.VarChar(255)
+  roles             String[]
+  activeRole        String          @db.VarChar(50)
+  hospital          Hospital?       @relation(fields: [hospitalId], references: [id])
+  hospitalId        Int?
+  isActive          Boolean         @default(true)
+  lastLogin         DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // العلاقات مع TransferRequest
+  approvedRequests  TransferRequest[] @relation("Approver")
+  requestedRequests TransferRequest[] @relation("Requester")
+
+  // ✅ العلاقة العكسية مع AuditLog
+  auditLogs         AuditLog[]      @relation("UserAuditLogs")
+
+  @@index([hospitalId])
+  @@index([activeRole])
+}
+
+model Patient {
+  id                  Int       @id @default(autoincrement())
+  reportNumber        String?   @db.VarChar(100)
+  reportDate          DateTime?
+  reportTime          String?   @db.VarChar(10)
+  fullName            String    @db.VarChar(500)
+  nationalId          String    @db.VarChar(14)
+  age                 Int?
+  gender              String?   @db.VarChar(10)
+  governorate         String?   @db.VarChar(255)
+  address             String?   @db.VarChar(500)
+  phone1              String?   @db.VarChar(20)
+  phone2              String?   @db.VarChar(20)
+  referralSource      String?   @db.VarChar(500)
+  doctorName          String?   @db.VarChar(255)
+  attachments         String?
+  sameHospital        Boolean?
+  careType            String?   @db.VarChar(255)
+  admissionDate       DateTime?
+  admissionTime       String?   @db.VarChar(10)
+  apacheScore         Int?
+  initialDiagnosis    String?
+  additionalServices  String?
+  vent                Boolean?
+  transferToOther     Boolean?
+  transferReason      String?   @db.VarChar(500)
+  icuClass            String?   @db.VarChar(100)
+  finalDiagnosis      String?
+  dischargeStatus     String?   @db.VarChar(100)
+  dischargeCriteria   String?   @db.VarChar(500)
+  dischargeReport     String?
+  dischargeDate       DateTime?
+  dischargeTime       String?   @db.VarChar(10)
+  notes               String?
+  directTransfer      Boolean?
+  hospital            Hospital? @relation(fields: [hospitalId], references: [id])
+  hospitalId          Int?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // العلاقة مع TransferRequest
+  transferRequests    TransferRequest[]
+
+  // ✅ العلاقة العكسية مع AuditLog
+  auditLogs           AuditLog[] @relation("PatientAuditLogs")
+
+  @@index([nationalId])
+  @@index([reportNumber])
+  @@index([hospitalId])
+}
+
+model TransferRequest {
+  id            Int       @id @default(autoincrement())
+  patientId     Int
+  patient       Patient   @relation(fields: [patientId], references: [id])
+  fromHospital  String    @db.VarChar(500)
+  toHospital    String    @db.VarChar(500)
+  reason        String?   @db.Text
+  status        String    @default("pending")
+  notes         String?   @db.Text
+  approvedBy    Int?
+  approver      User?     @relation("Approver", fields: [approvedBy], references: [id])
+  requestedBy   Int?
+  requester     User?     @relation("Requester", fields: [requestedBy], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // ✅ العلاقة العكسية مع AuditLog
+  auditLogs     AuditLog[] @relation("TransferAuditLogs")
+
+  @@index([status])
+  @@index([fromHospital])
+  @@index([toHospital])
+}
+
+model AuditLog {
+  id              Int       @id @default(autoincrement())
+  action          String
+  description     String    @db.Text
+  userId          Int?
+  user            User?     @relation("UserAuditLogs", fields: [userId], references: [id])
+  patientId       Int?
+  patient         Patient?  @relation("PatientAuditLogs", fields: [patientId], references: [id])
+  transferId      Int?
+  transferRequest TransferRequest? @relation("TransferAuditLogs", fields: [transferId], references: [id])
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime  @default(now())
+
+  @@index([action])
+  @@index([userId])
+  @@index([patientId])
+  @@index([transferId])
+}
+
+// server/prisma/schema.prisma
+
+model Service {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255) // اسم الخدمة بالعربية
+  code        String    @unique @db.VarChar(50) // كود فريد (مثل: ICU_ADVANCED)
+  type        String    @db.VarChar(20) // "medical" أو "administrative"
+  description String?   @db.Text
+  isActive    Boolean   @default(true) // تفعيل/إلغاء التفعيل
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([type])
+  @@index([isActive])
+}
+
+// server/prisma/schema.prisma
+
+model MedicalStandard {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255) // اسم المعيار
+  category    String    @db.VarChar(50)  // "discharge", "admission", "protocol", "quality"
+  description String?   @db.Text
+  criteria    String    @db.Text         // معايير مفصّلة (يمكن تخزينها كـ JSON string)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model Role {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique @db.VarChar(50) // اسم الدور بالإنجليزية
+  displayName String    @db.VarChar(100)        // الاسم المعروض بالعربية
+  description String?   @db.Text
+  permissions Json      @default("{}")         // صلاحيات الدور كـ JSON
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+}
+
