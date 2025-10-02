@@ -15,33 +15,36 @@ const Sidebar = () => {
 
     // ✅ تحديد العناصر المسموح بها حسب الدور
     const getMenuItems = () => {
-        const items = [
-            { path: '/dashboard', label: '📊 لوحة التحكم', icon: '📊' }
-        ];
+       const items = [
+        { path: '/dashboard', label: '📊 لوحة التحكم', icon: '📊' }
+    ];
 
-        if (role === 'system_admin') {
-            items.push(
-                { path: '/hospitals', label: '🏥 المستشفيات', icon: '🏥' },
-                { path: '/patients', label: '👥 المرضى', icon: '👥' },
-                { path: '/transfers', label: '🔄 طلبات التحويل', icon: '🔄' },
-                
-            );
-        }
-        else if (role === 'hospital_admin') {
-            items.push(
-                { path: '/hospitals', label: '🏥 المستشفى', icon: '🏥' },
-                { path: '/patients', label: '👥 المرضى', icon: '👥' }
-            );
-        }
-        else if (['doctor', 'nurse'].includes(role)) {
-            items.push({ path: '/patients', label: '👥 المرضى', icon: '👥' });
-        }
-        else if (role === 'data_officer') {
-            items.push({ path: '/transfers', label: '🔄 طلبات التحويل', icon: '🔄' });
-        }
+    if (role === 'system_admin') {
+        items.push(
+            { path: '/hospitals', label: '🏥 المستشفيات', icon: '🏥' },
+            { path: '/patients', label: '👥 المرضى', icon: '👥' },
+            { path: '/patients/register', label: '➕ تسجيل مريض جديد', icon: '➕' },
+            { path: '/transfers', label: '🔄 طلبات التحويل', icon: '🔄' }
+        );
+    }
+    else if (role === 'hospital_admin') {
+        items.push(
+            { path: '/hospitals', label: '🏥 المستشفى', icon: '🏥' },
+            { path: '/patients', label: '👥 المرضى', icon: '👥' }
+        );
+    }
+    else if (['doctor', 'nurse'].includes(role)) {
+        items.push(
+            { path: '/patients', label: '👥 المرضى', icon: '👥' },
+            { path: '/patients/register', label: '➕ تسجيل مريض جديد', icon: '➕' }
+        );
+    }
+    else if (role === 'data_officer') {
+        items.push({ path: '/transfers', label: '🔄 طلبات التحويل', icon: '🔄' });
+    }
 
-        return items;
-    };
+    return items;
+};
 
     const menuItems = getMenuItems();
 
