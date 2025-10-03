@@ -48,7 +48,7 @@ export const getPendingTransfers = async (req, res) => {
 // الموافقة على طلب التحويل
 export const approveTransfer = async (req, res) => {
     const { id } = req.params;
-    const userId = req.user?.userId;
+    const userId = req.session?.userId;
 
     if (!userId) {
         return res.status(401).json({ error: 'غير مصرح بالوصول' });
@@ -56,7 +56,8 @@ export const approveTransfer = async (req, res) => {
 
     try {
         const existingRequest = await prisma.transferRequest.findUnique({
-            where: { id: parseInt(id) }
+            where: { id: parseInt(id, 10) },
+            include: { patient: true }
         });
 
         if (!existingRequest) {
@@ -65,6 +66,13 @@ export const approveTransfer = async (req, res) => {
 
         if (existingRequest.status !== 'pending') {
             return res.status(400).json({ error: 'هذا الطلب تم معالجته مسبقًا' });
+        }
+
+        // تحقق من صلاحية المستشفى
+        if (req.session.userRole === 'hospital_admin') {
+            if (existingRequest.patient.hospitalId !== req.session.hospitalId) {
+                return res.status(403).json({ error: 'لا يمكنك الموافقة على تحويل مريض من مستشفى آخر.' });
+            }
         }
 
         // ✅ إنشاء كائن منفصل للتحديث
@@ -76,8 +84,8 @@ export const approveTransfer = async (req, res) => {
         };
 
         const updatedRequest = await prisma.transferRequest.update({
-            where: { id: parseInt(id) },
-             updateData,
+            where: { id: parseInt(id, 10) },
+            data: updateData,
             include: {
                 patient: true,
                 requester: {
@@ -93,10 +101,7 @@ export const approveTransfer = async (req, res) => {
             updatedAt: new Date()
         };
 
-        await prisma.patient.update({
-            where: { id: updatedRequest.patientId },
-             patientUpdateData
-        });
+        await prisma.patient.update({ where: { id: updatedRequest.patientId }, data: patientUpdateData });
 
         console.log(`✅ [موافقة] تم الموافقة على طلب تحويل المريض: ${updatedRequest.patient.fullName}`);
         console.log(`   📩 إشعار للمستخدم: ${updatedRequest.requester?.email || 'غير محدد'}`);
@@ -117,7 +122,7 @@ export const approveTransfer = async (req, res) => {
 export const rejectTransfer = async (req, res) => {
     const { id } = req.params;
     const { notes } = req.body;
-    const userId = req.user?.userId;
+    const userId = req.session?.userId;
 
     if (!userId) {
         return res.status(401).json({ error: 'غير مصرح بالوصول' });
@@ -129,7 +134,8 @@ export const rejectTransfer = async (req, res) => {
 
     try {
         const existingRequest = await prisma.transferRequest.findUnique({
-            where: { id: parseInt(id) }
+            where: { id: parseInt(id, 10) },
+            include: { patient: true }
         });
 
         if (!existingRequest) {
@@ -138,6 +144,13 @@ export const rejectTransfer = async (req, res) => {
 
         if (existingRequest.status !== 'pending') {
             return res.status(400).json({ error: 'هذا الطلب تم معالجته مسبقًا' });
+        }
+
+        // تحقق من صلاحية المستشفى
+        if (req.session.userRole === 'hospital_admin') {
+            if (existingRequest.patient.hospitalId !== req.session.hospitalId) {
+                return res.status(403).json({ error: 'لا يمكنك رفض تحويل مريض من مستشفى آخر.' });
+            }
         }
 
         // ✅ إنشاء كائن منفصل للتحديث
@@ -149,8 +162,8 @@ export const rejectTransfer = async (req, res) => {
         };
 
         const updatedRequest = await prisma.transferRequest.update({
-            where: { id: parseInt(id) },
-             updateData,
+            where: { id: parseInt(id, 10) },
+            data: updateData,
             include: {
                 patient: true,
                 requester: {
@@ -167,7 +180,7 @@ export const rejectTransfer = async (req, res) => {
 
         await prisma.patient.update({
             where: { id: updatedRequest.patientId },
-             patientUpdateData
+            data: patientUpdateData
         });
 
         console.log(`❌ [رفض] تم رفض طلب تحويل المريض: ${updatedRequest.patient.fullName}`);

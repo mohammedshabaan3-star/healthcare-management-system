@@ -4,6 +4,7 @@ import api from '../../utils/api';
 const PerformanceReports = () => {
     const [performance, setPerformance] = useState([]);
     const [loading, setLoading] = useState(true);
+    const currentRole = JSON.parse(localStorage.getItem('user') || 'null')?.activeRole;
 
     useEffect(() => {
         fetchPerformance();
@@ -22,6 +23,14 @@ const PerformanceReports = () => {
 
     if (loading) {
         return <div style={{ padding: '20px', textAlign: 'center' }}>⏳ جارٍ التحميل...</div>;
+    }
+
+    if (!['system_admin', 'hospital_admin'].includes(currentRole)) {
+        return (
+            <div style={{ padding: '20px', direction: 'rtl', textAlign: 'center' }}>
+                <h3>غير مصرح بالوصول إلى هذه الصفحة</h3>
+            </div>
+        );
     }
 
     return (

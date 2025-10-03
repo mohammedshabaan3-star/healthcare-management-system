@@ -7,6 +7,10 @@ const prisma = new PrismaClient();
  * 🚀 دالة Seed لإدخال المستشفيات من ملف Excel
  */
 export const seedHospitals = async () => {
+    if (!process.env.DATABASE_URL) {
+        console.info('DATABASE_URL not set - skipping hospitals seed (local sqlite fallback).');
+        return;
+    }
     try {
         const hospitalsFromFile = loadHospitalFile();
 
@@ -18,7 +22,7 @@ export const seedHospitals = async () => {
         for (const hospital of hospitalsFromFile) {
             if (!hospital.name) continue;
 
-            // ✅ البحث عن مستشفى بنفس الاسم أو الكود
+            // البحث عن مستشفى بنفس الاسم أو الكود
             let existing = null;
             if (hospital.code) {
                 existing = await prisma.hospital.findUnique({ where: { code: hospital.code } });
@@ -27,10 +31,16 @@ export const seedHospitals = async () => {
                 existing = await prisma.hospital.findFirst({ where: { name: hospital.name } });
             }
 
-            // ✅ البحث عن المحافظة
+            // البحث عن المحافظة
             const governorate = hospital.governorate
                 ? await prisma.governorate.findFirst({ where: { name: hospital.governorate } })
                 : null;
+
+            // إذا كانت المحافظة مطلوبة وغير موجودة
+            if (hospital.governorate && !governorate) {
+                console.warn(`⚠️ المحافظة غير موجودة: ${hospital.governorate} للمستشفى ${hospital.name}`);
+                continue;
+            }
 
             if (existing) {
                 // تحديث
@@ -46,8 +56,13 @@ export const seedHospitals = async () => {
                     }
                 });
             } else {
-                // إنشاء جديد
-                const code = hospital.code?.trim() || `HOSP-${Math.floor(Math.random() * 1000000)}`;
+                // إنشاء جديد مع ضمان عدم تكرار الكود
+                let code = hospital.code?.trim();
+                if (!code) {
+                    do {
+                        code = `HOSP-${Math.floor(Math.random() * 1000000)}`;
+                    } while (await prisma.hospital.findUnique({ where: { code } }));
+                }
                 await prisma.hospital.create({
                     data: {
                         code,

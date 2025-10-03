@@ -7,6 +7,8 @@ const TransferApprovalDashboard = () => {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isHospitalAdmin = user?.activeRole === 'hospital_admin';
 
     useEffect(() => {
         const fetchRequests = async () => {
@@ -41,7 +43,6 @@ const TransferApprovalDashboard = () => {
         <div style={{ padding: '20px', direction: 'rtl' }}>
             <h2 style={{ textAlign: 'center', color: '#007bff' }}>📋 لوحة تحكم الموافقات</h2>
             <ExportButtons type="transfers" />
-            
             {/* شريط البحث */}
             <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -73,6 +74,7 @@ const TransferApprovalDashboard = () => {
                                 <th style={{ padding: '12px', border: '1px solid #dee2e6' }}>من مستشفى</th>
                                 <th style={{ padding: '12px', border: '1px solid #dee2e6' }}>إلى مستشفى</th>
                                 <th style={{ padding: '12px', border: '1px solid #dee2e6' }}>الحالة</th>
+                                {isHospitalAdmin && <th style={{ padding: '12px', border: '1px solid #dee2e6' }}>إجراءات</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -92,6 +94,32 @@ const TransferApprovalDashboard = () => {
                                             معلق
                                         </span>
                                     </td>
+                                    {isHospitalAdmin && (
+                                        <td style={{ padding: '12px', border: '1px solid #dee2e6' }}>
+                                            <button
+                                                style={{ backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', padding: '8px 12px', marginRight: '8px', cursor: 'pointer' }}
+                                                onClick={async () => {
+                                                    try {
+                                                        await api.post(`/transfers/${req.id}/approve`);
+                                                        setRequests(requests.filter(r => r.id !== req.id));
+                                                    } catch (error) {
+                                                        alert('فشل في الموافقة على التحويل');
+                                                    }
+                                                }}
+                                            >موافقة</button>
+                                            <button
+                                                style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', padding: '8px 12px', cursor: 'pointer' }}
+                                                onClick={async () => {
+                                                    try {
+                                                        await api.post(`/transfers/${req.id}/reject`);
+                                                        setRequests(requests.filter(r => r.id !== req.id));
+                                                    } catch (error) {
+                                                        alert('فشل في رفض التحويل');
+                                                    }
+                                                }}
+                                            >رفض</button>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>

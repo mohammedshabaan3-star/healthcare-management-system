@@ -1,0 +1,26 @@
+nohup: ignoring input
+
+> server@1.0.0 start
+> node src/app.js
+
+🚀 Server running on port 5000
+✅ تم إنشاء حساب مدير النظام تلقائيًا!
+📧 البريد الإلكتروني: admin@hospital.com
+🔑 كلمة المرور: Admin123!
+⏳ لا توجد بيانات للمحافظات. بدء الإدخال التلقائي من الملف...
+✅ تمت إضافة 27 محافظة و 289 مركز/حي بنجاح.
+❌ خطأ في الإدخال التلقائي للمستشفيات: PrismaClientKnownRequestError: 
+Invalid `prisma.hospital.findFirst()` invocation:
+
+
+The column `Hospital.beds` does not exist in the current database.
+    at $n.handleRequestError (/workspaces/healthcare-management-system/server/node_modules/@prisma/client/runtime/library.js:121:7315)
+    at $n.handleAndLogRequestError (/workspaces/healthcare-management-system/server/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/workspaces/healthcare-management-system/server/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/workspaces/healthcare-management-system/server/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async seedHospitals (file:///workspaces/healthcare-management-system/server/src/services/seedHospitals.js:31:28)
+    at async Server.<anonymous> (file:///workspaces/healthcare-management-system/server/src/app.js:87:5) {
+  code: 'P2022',
+  clientVersion: '5.22.0',
+  meta: { modelName: 'Hospital', column: 'Hospital.beds' }
+}

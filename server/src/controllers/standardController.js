@@ -34,9 +34,7 @@ export const createStandard = async (req, res) => {
             isActive: true
         };
 
-        const standard = await prisma.medicalStandard.create({
-             standardData
-        });
+       const standard = await prisma.medicalStandard.create({ data: standardData });
 
         res.status(201).json({
             success: true,
@@ -66,8 +64,8 @@ export const updateStandard = async (req, res) => {
         };
 
         const standard = await prisma.medicalStandard.update({
-            where: { id: parseInt(id) },
-             standardData
+            where: { id: parseInt(id, 10) },
+            data: standardData
         });
 
         res.json({
@@ -87,9 +85,7 @@ export const deleteStandard = async (req, res) => {
     const { id } = req.params;
 
     try {
-        await prisma.medicalStandard.delete({
-            where: { id: parseInt(id) }
-        });
+    await prisma.medicalStandard.delete({ where: { id: parseInt(id, 10) } });
 
         res.json({
             success: true,
@@ -107,7 +103,7 @@ export const toggleStandardStatus = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const standard = await prisma.medicalStandard.findUnique({ where: { id: parseInt(id) } });
+    const standard = await prisma.medicalStandard.findUnique({ where: { id: parseInt(id, 10) } });
         if (!standard) {
             return res.status(404).json({ error: 'المعيار غير موجود' });
         }
@@ -118,8 +114,8 @@ export const toggleStandardStatus = async (req, res) => {
         };
 
         const updatedStandard = await prisma.medicalStandard.update({
-            where: { id: parseInt(id) },
-             standardData
+            where: { id: parseInt(id, 10) },
+            data: standardData
         });
 
         res.json({

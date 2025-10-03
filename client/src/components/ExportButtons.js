@@ -1,19 +1,15 @@
 // client/src/components/ExportButtons.js
 import React from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 
 const ExportButtons = ({ type }) => {
     const handleExport = async (format) => {
         try {
-            const token = localStorage.getItem('token');
             const endpoint = type === 'hospitals' ? '/hospitals' :
                            type === 'patients' ? '/patients' :
                            '/transfers';
 
-            const response = await axios.get(`http://localhost:5000/api/export${endpoint}?format=${format}`, {
-                headers: { Authorization: `Bearer ${token}` },
-                responseType: 'blob'
-            });
+            const response = await api.get(`/export${endpoint}?format=${format}`, { responseType: 'blob' });
 
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');

@@ -8,6 +8,7 @@ const FileUploadManager = () => {
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState('');
     const [uploadHistory, setUploadHistory] = useState([]);
+    const currentRole = JSON.parse(localStorage.getItem('user') || 'null')?.activeRole;
 
     const handleFileChange = (e) => {
         setSelectedFile(e.target.files[0]);
@@ -137,23 +138,27 @@ const FileUploadManager = () => {
                     </div>
                 </div>
                 <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                    <button
-                        onClick={handleUpload}
-                        disabled={uploading || !selectedFile || !fileType}
-                        style={{
-                            backgroundColor: '#007bff',
-                            color: 'white',
-                            border: 'none',
-                            padding: '12px 24px',
-                            borderRadius: '6px',
-                            cursor: uploading ? 'not-allowed' : 'pointer',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            minWidth: '200px'
-                        }}
-                    >
-                        {uploading ? 'جارٍ الرفع...' : 'رفع الملف'}
-                    </button>
+                    {currentRole === 'system_admin' || currentRole === 'data_officer' ? (
+                        <button
+                            onClick={handleUpload}
+                            disabled={uploading || !selectedFile || !fileType}
+                            style={{
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                padding: '12px 24px',
+                                borderRadius: '6px',
+                                cursor: uploading ? 'not-allowed' : 'pointer',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                minWidth: '200px'
+                            }}
+                        >
+                            {uploading ? 'جارٍ الرفع...' : 'رفع الملف'}
+                        </button>
+                    ) : (
+                        <div style={{ color: '#6c757d' }}>محجوز للصلاحيات</div>
+                    )}
                 </div>
             </div>
 

@@ -106,6 +106,15 @@ const UserManagement = () => {
                 const { password, ...updateData } = formData;
                 await api.put(`/users/${editingUser.id}`, updateData);
                 setMessage('✅ تم تحديث المستخدم بنجاح');
+                // تحديث بيانات المستخدم الحالي إذا كان هو نفسه الذي تم تعديله
+                if (editingUser.id === (JSON.parse(localStorage.getItem('user'))?.id)) {
+                    try {
+                        const response = await api.get('/auth/check', { withCredentials: true });
+                        if (response.data?.user) {
+                            localStorage.setItem('user', JSON.stringify(response.data.user));
+                        }
+                    } catch (err) {}
+                }
             } else {
                 await api.post('/users', formData);
                 setMessage('✅ تم إضافة المستخدم بنجاح');
@@ -175,6 +184,8 @@ const UserManagement = () => {
         return <div style={{ padding: 20, textAlign: 'center' }}>⏳ جارٍ التحميل...</div>;
     }
 
+    const currentRole = JSON.parse(localStorage.getItem('user') || 'null')?.activeRole;
+
     return (
         <div style={{ padding: '20px', direction: 'rtl' }}>
             <h2 style={{ textAlign: 'center', color: '#007bff', marginBottom: '30px' }}>👥 إدارة المستخدمين</h2>
@@ -190,14 +201,16 @@ const UserManagement = () => {
                 </div>
             )}
 
-            <div style={{ marginBottom: '20px', textAlign: 'left' }}>
-                <button
-                    onClick={() => { setEditingUser(null); resetForm(); setShowAddUserModal(true); }}
-                    style={{ backgroundColor: '#28a745', color: 'white', padding: '10px 20px', borderRadius: '6px' }}
-                >
-                    ➕ إضافة مستخدم جديد
-                </button>
-            </div>
+            {currentRole === 'system_admin' && (
+                <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+                    <button
+                        onClick={() => { setEditingUser(null); resetForm(); setShowAddUserModal(true); }}
+                        style={{ backgroundColor: '#28a745', color: 'white', padding: '10px 20px', borderRadius: '6px' }}
+                    >
+                        ➕ إضافة مستخدم جديد
+                    </button>
+                </div>
+            )}
 
             <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
                 {Array.isArray(users) && users.length > 0 ? (
@@ -235,11 +248,17 @@ const UserManagement = () => {
                                             </span>
                                         </td>
                                         <td>
-                                            <button onClick={() => handleEditUser(user)} style={{ backgroundColor: '#ffc107', margin: '0 5px' }}>✏️ تعديل</button>
-                                            <button onClick={() => handleToggleActive(user)} style={{ backgroundColor: user.isActive ? '#dc3545' : '#28a745', color: 'white', margin: '0 5px' }}>
-                                                {user.isActive ? '🚫 تعطيل' : '✅ تفعيل'}
-                                            </button>
-                                            <button onClick={() => handleDeleteUser(user.id)} style={{ backgroundColor: '#6c757d', color: 'white', margin: '0 5px' }}>🗑️ حذف</button>
+                                            {currentRole === 'system_admin' ? (
+                                                <>
+                                                    <button onClick={() => handleEditUser(user)} style={{ backgroundColor: '#ffc107', margin: '0 5px' }}>✏️ تعديل</button>
+                                                    <button onClick={() => handleToggleActive(user)} style={{ backgroundColor: user.isActive ? '#dc3545' : '#28a745', color: 'white', margin: '0 5px' }}>
+                                                        {user.isActive ? '🚫 تعطيل' : '✅ تفعيل'}
+                                                    </button>
+                                                    <button onClick={() => handleDeleteUser(user.id)} style={{ backgroundColor: '#6c757d', color: 'white', margin: '0 5px' }}>🗑️ حذف</button>
+                                                </>
+                                            ) : (
+                                                <span style={{ color: '#6c757d' }}>محجوز للصلاحيات</span>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

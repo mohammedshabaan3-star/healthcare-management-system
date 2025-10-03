@@ -15,12 +15,14 @@ import TransferApprovalDashboard from './modules/transfers/TransferApprovalDashb
 
 // صفحات مدير النظام
 import SystemAdminDashboard from './modules/dashboard/SystemAdminDashboard';
+import PatientRegistrationForm from './modules/patients/PatientRegistrationForm';
 import FileUploadManager from './modules/admin/FileUploadManager';
 import UserManagement from './modules/admin/UserManagement';
 import RoleManagement from './modules/admin/RoleManagement';
 import PasswordResetAdmin from './modules/admin/PasswordResetAdmin';
 import MedicalServicesManagement from './modules/admin/MedicalServicesManagement';
 import MedicalStandardsManagement from './modules/admin/MedicalStandardsManagement';
+import ProtocolsManagement from './modules/admin/ProtocolsManagement';
 import HospitalManagement from './modules/admin/HospitalManagement';
 import GovernorateManagement from './modules/admin/GovernorateManagement';
 import ReportsManagement from './modules/admin/ReportsManagement';
@@ -73,61 +75,65 @@ const App = () => {
                 
                 <Route element={<MainLayout />}>
                     <Route path="dashboard" element={
-                        <ProtectedRoute allowedRoles={['system_admin','hospital_admin','doctor','nurse','data_officer']}>
-                            {hasRole(['system_admin']) ? <SystemAdminDashboard /> : <Dashboard />}
+                        <ProtectedRoute allowedRoles={["system_admin","hospital_admin","doctor","nurse","data_officer"]}>
+                            {hasRole(["system_admin"]) ? <SystemAdminDashboard /> : <Dashboard />}
                         </ProtectedRoute>
                     }/>
-
                     <Route path="hospitals" element={
-                        <ProtectedRoute allowedRoles={['system_admin','hospital_admin']}>
+                        <ProtectedRoute allowedRoles={["system_admin","hospital_admin"]}>
                             <HospitalsList />
                         </ProtectedRoute>
                     }/>
-
                     <Route path="patients" element={
-                        <ProtectedRoute allowedRoles={['system_admin','doctor','nurse']}>
+                        <ProtectedRoute allowedRoles={["system_admin","doctor","nurse"]}>
                             <PatientsList />
                         </ProtectedRoute>
                     }/>
-
+                    <Route path="patients/register" element={
+                        <ProtectedRoute allowedRoles={["system_admin","doctor","nurse"]}>
+                            <PatientRegistrationForm />
+                        </ProtectedRoute>
+                    }/>
                     <Route path="transfers" element={
-                        <ProtectedRoute allowedRoles={['system_admin','data_officer']}>
+                        <ProtectedRoute allowedRoles={["system_admin","data_officer","hospital_admin"]}>
                             <TransferApprovalDashboard />
                         </ProtectedRoute>
                     }/>
-
                     <Route path="admin/upload" element={
-                        <ProtectedRoute allowedRoles={['system_admin']}><FileUploadManager /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={["system_admin"]}><FileUploadManager /></ProtectedRoute>
                     }/>
                     <Route path="admin/users" element={
-                        <ProtectedRoute allowedRoles={['system_admin']}><UserManagement /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={["system_admin"]}><UserManagement /></ProtectedRoute>
                     }/>
                     <Route path="admin/roles" element={
-                        <ProtectedRoute allowedRoles={['system_admin']}><RoleManagement /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={["system_admin"]}><RoleManagement /></ProtectedRoute>
                     }/>
                     <Route path="admin/password-reset" element={
-                        <ProtectedRoute allowedRoles={['system_admin']}><PasswordResetAdmin /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={["system_admin"]}><PasswordResetAdmin /></ProtectedRoute>
                     }/>
                     <Route path="admin/hospitals" element={
-                        <ProtectedRoute allowedRoles={['system_admin']}><HospitalManagement /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={["system_admin"]}><HospitalManagement /></ProtectedRoute>
                     }/>
                     <Route path="admin/governorates" element={
-                        <ProtectedRoute allowedRoles={['system_admin']}><GovernorateManagement /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={["system_admin"]}><GovernorateManagement /></ProtectedRoute>
                     }/>
                     <Route path="admin/services" element={
-                        <ProtectedRoute allowedRoles={['system_admin']}><MedicalServicesManagement /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={["system_admin"]}><MedicalServicesManagement /></ProtectedRoute>
                     }/>
                     <Route path="admin/standards" element={
-                        <ProtectedRoute allowedRoles={['system_admin']}><MedicalStandardsManagement /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={["system_admin"]}><MedicalStandardsManagement /></ProtectedRoute>
+                    }/>
+                    <Route path="admin/protocols" element={
+                        <ProtectedRoute allowedRoles={["system_admin"]}><ProtocolsManagement /></ProtectedRoute>
                     }/>
                     <Route path="admin/reports" element={
-                        <ProtectedRoute allowedRoles={['system_admin']}><ReportsManagement /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={["system_admin"]}><ReportsManagement /></ProtectedRoute>
                     }/>
                     <Route path="admin/activity-log" element={
-                        <ProtectedRoute allowedRoles={['system_admin']}><ActivityLog /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={["system_admin"]}><ActivityLog /></ProtectedRoute>
                     }/>
                     <Route path="admin/performance" element={
-                        <ProtectedRoute allowedRoles={['system_admin']}><PerformanceReports /></ProtectedRoute>
+                        <ProtectedRoute allowedRoles={["system_admin"]}><PerformanceReports /></ProtectedRoute>
                     }/>
                     <Route path="*" element={<Navigate to="/dashboard" />} />
                 </Route>

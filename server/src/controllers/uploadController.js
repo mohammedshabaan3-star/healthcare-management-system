@@ -41,7 +41,7 @@ export const uploadGovernorates = async (req, res) => {
             }));
 
             const createdDistricts = await tx.district.createMany({
-                 districtsToCreate,
+                data: districtsToCreate,
                 skipDuplicates: true // تجنب التكرارات
             });
 

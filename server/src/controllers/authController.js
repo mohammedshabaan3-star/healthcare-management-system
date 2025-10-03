@@ -26,6 +26,7 @@ const buildUserResponse = (dbUser, session = {}) => {
                   code: dbUser.hospital.code,
               }
             : null,
+        hospitalId: dbUser.hospital ? dbUser.hospital.id : null,
         lastLogin: dbUser.lastLogin || null,
     };
 };
@@ -54,11 +55,13 @@ export const loginUser = async (req, res) => {
             return res.status(403).json({ error: 'ليس لديك صلاحية للدخول بهذا الدور' });
         }
 
-        // حفظ بيانات الجلسة
-        req.session.userId = user.id;
-        req.session.userRole = role;
-        req.session.userEmail = user.email;
-        req.session.isLoggedIn = true;
+    // حفظ بيانات الجلسة (session-based)
+    req.session.userId = user.id;
+    req.session.userRole = role;
+    req.session.userEmail = user.email;
+    req.session.isLoggedIn = true;
+    // ضع معرف المستشفى في الجلسة إن وُجد (مهم لقيود الوصول بين المستشفيات)
+    req.session.hospitalId = user.hospital ? user.hospital.id : null;
 
         const updatedUser = await prisma.user.update({
             where: { id: user.id },

@@ -7,6 +7,10 @@ import fs from 'fs';
 const prisma = new PrismaClient();
 
 export const seedGovernoratesAndDistricts = async () => {
+    if (!process.env.DATABASE_URL) {
+        console.info('DATABASE_URL not set - skipping governorates seed (local sqlite fallback).');
+        return;
+    }
     try {
         // التحقق من وجود بيانات مسبقة
         const existingGovernorates = await prisma.governorate.findMany();

@@ -7,6 +7,7 @@ const HospitalManagement = () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [editingHospital, setEditingHospital] = useState(null);
+  const currentRole = JSON.parse(localStorage.getItem('user') || 'null')?.activeRole;
 
   const [filters, setFilters] = useState({
     governorate: "",
@@ -211,7 +212,7 @@ const HospitalManagement = () => {
             <tbody>
               {hospitals.length > 0 ? (
                 hospitals.map((h, i) => (
-                  <tr key={h.id} style={{ backgroundColor: i % 2 === 0 ? "#f8f9fa" : "#fff" }}>
+                    <tr key={h.id} style={{ backgroundColor: i % 2 === 0 ? "#f8f9fa" : "#fff" }}>
                     <td>
                       {editingHospital?.id === h.id ? (
                         <input type="text" value={editingHospital.code} onChange={(e) => setEditingHospital({ ...editingHospital, code: e.target.value })} />
@@ -258,16 +259,20 @@ const HospitalManagement = () => {
                       ) : h.mediumCareBeds}
                     </td>
                     <td>
-                      {editingHospital?.id === h.id ? (
-                        <>
-                          <button onClick={saveEdit} style={{ backgroundColor: "#28a745", color: "#fff", marginRight: 5 }}>💾 حفظ</button>
-                          <button onClick={() => setEditingHospital(null)} style={{ backgroundColor: "#6c757d", color: "#fff" }}>❌ إلغاء</button>
-                        </>
+                      {currentRole === 'system_admin' || currentRole === 'hospital_admin' ? (
+                        editingHospital?.id === h.id ? (
+                          <>
+                            <button onClick={saveEdit} style={{ backgroundColor: "#28a745", color: "#fff", marginRight: 5 }}>💾 حفظ</button>
+                            <button onClick={() => setEditingHospital(null)} style={{ backgroundColor: "#6c757d", color: "#fff" }}>❌ إلغاء</button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => startEdit(h)} style={{ backgroundColor: "#ffc107", marginRight: 5 }}>✏️ تعديل</button>
+                            <button onClick={() => handleDelete(h.id)} style={{ backgroundColor: "#dc3545", color: "#fff" }}>🗑️ حذف</button>
+                          </>
+                        )
                       ) : (
-                        <>
-                          <button onClick={() => startEdit(h)} style={{ backgroundColor: "#ffc107", marginRight: 5 }}>✏️ تعديل</button>
-                          <button onClick={() => handleDelete(h.id)} style={{ backgroundColor: "#dc3545", color: "#fff" }}>🗑️ حذف</button>
-                        </>
+                        <span style={{ color: '#6c757d' }}>محجوز للصلاحيات</span>
                       )}
                     </td>
                   </tr>

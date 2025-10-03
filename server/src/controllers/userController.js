@@ -72,7 +72,13 @@ export const updateUser = async (req, res) => {
 
     try {
         const parsedHospitalId = hospitalId ? parseInt(hospitalId, 10) : null;
-
+        const userData = await prisma.user.findUnique({ where: { id: parseInt(id, 10) } });
+        if (!userData) {
+            return res.status(404).json({ error: 'المستخدم غير موجود' });
+        }
+        if (req.session.userRole === 'hospital_admin' && userData.hospitalId !== req.session.hospitalId) {
+            return res.status(403).json({ error: 'لا يمكنك تعديل مستخدم من مستشفى آخر.' });
+        }
         const user = await prisma.user.update({
             where: { id: parseInt(id, 10) },
             data: {
@@ -85,15 +91,12 @@ export const updateUser = async (req, res) => {
             },
             include: { hospital: true }
         });
-
         const { password: _, ...safeUser } = user;
-
         res.json({
             success: true,
             message: 'تم تحديث المستخدم بنجاح',
             user: safeUser
         });
-
     } catch (error) {
         console.error('Error updating user:', error);
         res.status(500).json({ error: 'فشل في تحديث المستخدم' });
@@ -105,15 +108,20 @@ export const deleteUser = async (req, res) => {
     const { id } = req.params;
 
     try {
+        const userData = await prisma.user.findUnique({ where: { id: parseInt(id, 10) } });
+        if (!userData) {
+            return res.status(404).json({ error: 'المستخدم غير موجود' });
+        }
+        if (req.session.userRole === 'hospital_admin' && userData.hospitalId !== req.session.hospitalId) {
+            return res.status(403).json({ error: 'لا يمكنك حذف مستخدم من مستشفى آخر.' });
+        }
         await prisma.user.delete({
             where: { id: parseInt(id, 10) }
         });
-
         res.json({
             success: true,
             message: 'تم حذف المستخدم بنجاح'
         });
-
     } catch (error) {
         console.error('Error deleting user:', error);
         res.status(500).json({ error: 'فشل في حذف المستخدم' });

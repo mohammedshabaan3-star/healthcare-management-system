@@ -1,6 +1,7 @@
 // client/src/modules/admin/MedicalServicesManagement.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import api from '../../utils/api';
 
 const MedicalServicesManagement = () => {
     const [services, setServices] = useState([]);
@@ -14,6 +15,7 @@ const MedicalServicesManagement = () => {
         description: ''
     });
     const [message, setMessage] = useState('');
+    const currentRole = JSON.parse(localStorage.getItem('user') || 'null')?.activeRole;
 
     useEffect(() => {
         fetchServices();
@@ -21,10 +23,7 @@ const MedicalServicesManagement = () => {
 
     const fetchServices = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/api/services', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get('/services');
             setServices(response.data);
             setLoading(false);
         } catch (error) {
@@ -41,18 +40,13 @@ const MedicalServicesManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem('token');
             let response;
 
             if (editingService) {
-                response = await axios.put(`http://localhost:5000/api/services/${editingService.id}`, formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                response = await api.put(`/services/${editingService.id}`, formData);
                 setMessage('✅ تم تحديث الخدمة بنجاح');
             } else {
-                response = await axios.post('http://localhost:5000/api/services', formData, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                response = await api.post('/services', formData);
                 setMessage('✅ تم إضافة الخدمة بنجاح');
             }
 
@@ -71,10 +65,7 @@ const MedicalServicesManagement = () => {
         }
 
         try {
-            const token = localStorage.getItem('token');
-            await axios.delete(`http://localhost:5000/api/services/${serviceId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.delete(`/services/${serviceId}`);
             setMessage('✅ تم حذف الخدمة بنجاح');
             fetchServices();
         } catch (error) {
@@ -84,10 +75,7 @@ const MedicalServicesManagement = () => {
 
     const handleToggleStatus = async (service) => {
         try {
-            const token = localStorage.getItem('token');
-            await axios.patch(`http://localhost:5000/api/services/${service.id}/toggle-status`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.patch(`/services/${service.id}/toggle-status`);
             setMessage(`✅ تم ${service.isActive ? 'إلغاء تفعيل' : 'تفعيل'} الخدمة بنجاح`);
             fetchServices();
         } catch (error) {
@@ -139,28 +127,32 @@ const MedicalServicesManagement = () => {
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                 textAlign: 'left'
             }}>
-                <button
-                    onClick={() => {
-                        setEditingService(null);
-                        setFormData({ name: '', code: '', type: 'medical', description: '' });
-                        setShowAddModal(true);
-                    }}
-                    style={{
-                        backgroundColor: '#28a745',
-                        color: 'white',
-                        border: 'none',
-                        padding: '10px 20px',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                    }}
-                >
-                    ➕ إضافة خدمة جديدة
-                </button>
+                {currentRole === 'system_admin' ? (
+                    <button
+                        onClick={() => {
+                            setEditingService(null);
+                            setFormData({ name: '', code: '', type: 'medical', description: '' });
+                            setShowAddModal(true);
+                        }}
+                        style={{
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 20px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}
+                    >
+                        ➕ إضافة خدمة جديدة
+                    </button>
+                ) : (
+                    <div style={{ color: '#6c757d' }}>محجوز للصلاحيات</div>
+                )}
             </div>
 
             <div style={{ 
@@ -221,50 +213,54 @@ const MedicalServicesManagement = () => {
                                             </span>
                                         </td>
                                         <td style={{ padding: '12px', border: '1px solid #dee2e6' }}>
-                                            <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
-                                                <button
-                                                    onClick={() => handleEdit(service)}
-                                                    style={{
-                                                        backgroundColor: '#ffc107',
-                                                        color: '#212529',
-                                                        border: 'none',
-                                                        padding: '5px 10px',
-                                                        borderRadius: '4px',
-                                                        cursor: 'pointer',
-                                                        fontSize: '12px'
-                                                    }}
-                                                >
-                                                    ✏️ تعديل
-                                                </button>
-                                                <button
-                                                    onClick={() => handleToggleStatus(service)}
-                                                    style={{
-                                                        backgroundColor: service.isActive ? '#6c757d' : '#28a745',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        padding: '5px 10px',
-                                                        borderRadius: '4px',
-                                                        cursor: 'pointer',
-                                                        fontSize: '12px'
-                                                    }}
-                                                >
-                                                    {service.isActive ? '🚫 تعطيل' : '✅ تفعيل'}
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(service.id)}
-                                                    style={{
-                                                        backgroundColor: '#dc3545',
-                                                        color: 'white',
-                                                        border: 'none',
-                                                        padding: '5px 10px',
-                                                        borderRadius: '4px',
-                                                        cursor: 'pointer',
-                                                        fontSize: '12px'
-                                                    }}
-                                                >
-                                                    🗑️ حذف
-                                                </button>
-                                            </div>
+                                            {currentRole === 'system_admin' ? (
+                                                <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
+                                                    <button
+                                                        onClick={() => handleEdit(service)}
+                                                        style={{
+                                                            backgroundColor: '#ffc107',
+                                                            color: '#212529',
+                                                            border: 'none',
+                                                            padding: '5px 10px',
+                                                            borderRadius: '4px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '12px'
+                                                        }}
+                                                    >
+                                                        ✏️ تعديل
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleToggleStatus(service)}
+                                                        style={{
+                                                            backgroundColor: service.isActive ? '#6c757d' : '#28a745',
+                                                            color: 'white',
+                                                            border: 'none',
+                                                            padding: '5px 10px',
+                                                            borderRadius: '4px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '12px'
+                                                        }}
+                                                    >
+                                                        {service.isActive ? '🚫 تعطيل' : '✅ تفعيل'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(service.id)}
+                                                        style={{
+                                                            backgroundColor: '#dc3545',
+                                                            color: 'white',
+                                                            border: 'none',
+                                                            padding: '5px 10px',
+                                                            borderRadius: '4px',
+                                                            cursor: 'pointer',
+                                                            fontSize: '12px'
+                                                        }}
+                                                    >
+                                                        🗑️ حذف
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <span style={{ color: '#6c757d' }}>محجوز للصلاحيات</span>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

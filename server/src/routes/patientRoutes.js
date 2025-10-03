@@ -10,13 +10,13 @@ import {
 const router = express.Router();
 
 // ✅ جلب جميع المرضى - متاح للأطباء، الممرضين، مدير النظام
-router.get('/', authenticateSession, authorizeRole('system_admin', 'doctor', 'nurse'), getPatients);
+router.get('/', authenticateSession, authorizeRole('system_admin', 'hospital_admin', 'doctor', 'nurse'), getPatients);
 
 // ✅ إنشاء مريض جديد - متاح للأطباء والممرضين ومدير النظام
-router.post('/', authenticateSession, authorizeRole('system_admin', 'doctor', 'nurse'), createPatient);
+router.post('/', authenticateSession, authorizeRole('system_admin', 'hospital_admin', 'doctor', 'nurse'), createPatient);
 
 // ✅ تحديث بيانات مريض - متاح للأطباء والممرضين ومدير النظام
-router.put('/:id', authenticateSession, authorizeRole('system_admin', 'doctor', 'nurse'), updatePatient);
+router.put('/:id', authenticateSession, authorizeRole('system_admin', 'hospital_admin', 'doctor', 'nurse'), updatePatient);
 
 // ✅ حذف مريض - متاح فقط لمدير النظام
 router.delete('/:id', authenticateSession, authorizeRole('system_admin'), deletePatient);

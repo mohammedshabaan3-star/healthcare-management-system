@@ -1,5 +1,6 @@
 // client/src/modules/patients/PatientsList.js
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 import ExportButtons from '../../components/ExportButtons';
 
@@ -45,8 +46,13 @@ const PatientsList = () => {
 
     return (
         <div style={{ padding: '20px', direction: 'rtl' }}>
-            <h2 style={{ textAlign: 'center', color: '#007bff' }}>📋 قائمة المرضى</h2>
-            <ExportButtons type="patients" />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                <h2 style={{ textAlign: 'center', color: '#007bff', margin: 0 }}>📋 قائمة المرضى</h2>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <ExportButtons type="patients" />
+                    <Link to="/patients/register" style={{ backgroundColor: '#28a745', color: 'white', padding: '8px 12px', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold' }}>➕ تسجيل مريض</Link>
+                </div>
+            </div>
             
             {/* شريط البحث */}
             <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>

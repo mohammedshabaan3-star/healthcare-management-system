@@ -3,8 +3,11 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 
 const RoleBasedRoute = ({ children, allowedRoles }) => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    const isAuthenticated = !!localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+    // For session-based auth the server sets a cookie; client keeps minimal user info in localStorage.
+    // If there's no user payload locally we consider the client unauthenticated and redirect to login.
+    const isAuthenticated = !!user;
 
     if (!isAuthenticated) {
         return <Navigate to="/login" />;

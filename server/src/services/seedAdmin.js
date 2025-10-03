@@ -4,6 +4,10 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 export const createAdminUserIfNotExists = async () => {
+    if (!process.env.DATABASE_URL) {
+        console.info('DATABASE_URL not set - skipping Prisma admin seed (local sqlite fallback).');
+        return;
+    }
     try {
         // التحقق إذا كان يوجد مدير نظام مسبقًا
         const existingAdmin = await prisma.user.findFirst({

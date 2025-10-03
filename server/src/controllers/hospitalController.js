@@ -112,6 +112,14 @@ export const updateHospital = async (req, res) => {
     const { name, code, governorateId, icuBeds, pediatricBeds, incubators, newbornBeds, mediumCareBeds } = req.body;
 
     try {
+        // تحقق من صلاحية المستشفى
+        const hospitalData = await prisma.hospital.findUnique({ where: { id: Number(id) } });
+        if (!hospitalData) {
+            return res.status(404).json({ error: 'المستشفى غير موجود' });
+        }
+        if (req.session.userRole === 'hospital_admin' && hospitalData.id !== req.session.hospitalId) {
+            return res.status(403).json({ error: 'لا يمكنك تعديل بيانات مستشفى آخر.' });
+        }
         const hospital = await prisma.hospital.update({
             where: { id: Number(id) },
             data: {
@@ -139,6 +147,14 @@ export const deleteHospital = async (req, res) => {
     const { id } = req.params;
 
     try {
+        // تحقق من صلاحية المستشفى
+        const hospitalData = await prisma.hospital.findUnique({ where: { id: Number(id) } });
+        if (!hospitalData) {
+            return res.status(404).json({ error: 'المستشفى غير موجود' });
+        }
+        if (req.session.userRole === 'hospital_admin' && hospitalData.id !== req.session.hospitalId) {
+            return res.status(403).json({ error: 'لا يمكنك حذف مستشفى آخر.' });
+        }
         await prisma.hospital.delete({ where: { id: Number(id) } });
         res.json({ success: true, message: 'تم حذف المستشفى بنجاح' });
     } catch (error) {

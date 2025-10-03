@@ -4,6 +4,7 @@ import api from '../../utils/api';
 const ActivityLog = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const currentRole = JSON.parse(localStorage.getItem('user') || 'null')?.activeRole;
 
     useEffect(() => {
         fetchLogs();
@@ -22,6 +23,14 @@ const ActivityLog = () => {
 
     if (loading) {
         return <div style={{ padding: '20px', textAlign: 'center' }}>⏳ جارٍ التحميل...</div>;
+    }
+
+    if (currentRole !== 'system_admin') {
+        return (
+            <div style={{ padding: '20px', direction: 'rtl', textAlign: 'center' }}>
+                <h3>غير مصرح بالوصول إلى هذه الصفحة</h3>
+            </div>
+        );
     }
 
     return (

@@ -6,6 +6,7 @@ const PasswordResetAdmin = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const currentRole = JSON.parse(localStorage.getItem('user') || 'null')?.activeRole;
 
   useEffect(() => {
     fetchUsers();
@@ -86,20 +87,24 @@ const PasswordResetAdmin = () => {
                   <td style={{ padding: '12px', border: '1px solid #dee2e6' }}>{user.email}</td>
                   <td style={{ padding: '12px', border: '1px solid #dee2e6' }}>{user.role}</td>
                   <td style={{ padding: '12px', border: '1px solid #dee2e6' }}>
-                    <button
-                      onClick={() => handleResetPassword(user.id)}
-                      style={{
-                        backgroundColor: '#dc3545',
-                        color: 'white',
-                        border: 'none',
-                        padding: '6px 12px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px'
-                      }}
-                    >
-                      🔄 إعادة التعيين
-                    </button>
+                    {currentRole === 'system_admin' ? (
+                      <button
+                        onClick={() => handleResetPassword(user.id)}
+                        style={{
+                          backgroundColor: '#dc3545',
+                          color: 'white',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '14px'
+                        }}
+                      >
+                        🔄 إعادة التعيين
+                      </button>
+                    ) : (
+                      <span style={{ color: '#6c757d' }}>محجوز للصلاحيات</span>
+                    )}
                   </td>
                 </tr>
               ))}

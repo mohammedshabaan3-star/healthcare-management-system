@@ -21,6 +21,7 @@ const RoleManagement = () => {
         }
     });
     const [message, setMessage] = useState('');
+    const currentRole = JSON.parse(localStorage.getItem('user') || 'null')?.activeRole;
 
     useEffect(() => {
         fetchRoles();
@@ -158,17 +159,21 @@ const RoleManagement = () => {
                 backgroundColor: 'white', padding: '20px', borderRadius: '8px',
                 marginBottom: '30px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', textAlign: 'left'
             }}>
-                <button
-                    onClick={() => { setEditingRole(null); resetForm(); setShowAddRoleModal(true); }}
-                    style={{
-                        backgroundColor: '#28a745', color: 'white', border: 'none',
-                        padding: '10px 20px', borderRadius: '6px', cursor: 'pointer',
-                        fontSize: '16px', fontWeight: 'bold', display: 'inline-flex',
-                        alignItems: 'center', gap: '8px'
-                    }}
-                >
-                    ➕ إضافة دور جديد
-                </button>
+                {currentRole === 'system_admin' ? (
+                    <button
+                        onClick={() => { setEditingRole(null); resetForm(); setShowAddRoleModal(true); }}
+                        style={{
+                            backgroundColor: '#28a745', color: 'white', border: 'none',
+                            padding: '10px 20px', borderRadius: '6px', cursor: 'pointer',
+                            fontSize: '16px', fontWeight: 'bold', display: 'inline-flex',
+                            alignItems: 'center', gap: '8px'
+                        }}
+                    >
+                        ➕ إضافة دور جديد
+                    </button>
+                ) : (
+                    <div style={{ color: '#6c757d' }}>محجوز للصلاحيات</div>
+                )}
             </div>
 
             <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
@@ -209,10 +214,14 @@ const RoleManagement = () => {
                                                 </span>
                                             </td>
                                             <td style={{ padding: '12px', border: '1px solid #dee2e6' }}>
-                                                <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
-                                                    <button onClick={() => handleEditRole(role)} style={{ backgroundColor: '#ffc107', color: '#212529', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>✏️ تعديل</button>
-                                                    <button onClick={() => handleDeleteRole(role.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>🗑️ حذف</button>
-                                                </div>
+                                                {currentRole === 'system_admin' ? (
+                                                    <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
+                                                        <button onClick={() => handleEditRole(role)} style={{ backgroundColor: '#ffc107', color: '#212529', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>✏️ تعديل</button>
+                                                        <button onClick={() => handleDeleteRole(role.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>🗑️ حذف</button>
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ color: '#6c757d' }}>محجوز للصلاحيات</span>
+                                                )}
                                             </td>
                                         </tr>
                                     );

@@ -1,6 +1,6 @@
 // client/src/modules/auth/ChangePassword.js
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../utils/api';
 
 const ChangePassword = () => {
     const [formData, setFormData] = useState({
@@ -35,10 +35,7 @@ const ChangePassword = () => {
         setMessage('');
 
         try {
-            const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/auth/change-password', formData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            await api.post('/auth/change-password', formData);
             setMessage('✅ تم تغيير كلمة المرور بنجاح');
             setFormData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
         } catch (error) {

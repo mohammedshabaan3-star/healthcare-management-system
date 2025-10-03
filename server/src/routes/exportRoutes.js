@@ -12,9 +12,9 @@ const router = express.Router();
 router.get('/hospitals', authenticateSession, authorizeRole('system_admin'), exportHospitals);
 
 // ✅ تصدير المرضى - متاح فقط لمدير النظام
-router.get('/patients', authenticateSession, authorizeRole('system_admin'), exportPatients);
+router.get('/patients', authenticateSession, authorizeRole('system_admin','data_officer'), exportPatients);
 
 // ✅ تصدير طلبات التحويل - متاح فقط لمدير النظام
-router.get('/transfers', authenticateSession, authorizeRole('system_admin'), exportTransfers);
+router.get('/transfers', authenticateSession, authorizeRole('system_admin','data_officer'), exportTransfers);
 
 export default router;

@@ -38,7 +38,15 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, { dialect: 'postgres', logging: false });
+// Initialize Sequelize with DATABASE_URL when provided (production),
+// otherwise fall back to a lightweight sqlite DB for local development.
+let sequelize;
+if (process.env.DATABASE_URL) {
+    sequelize = new Sequelize(process.env.DATABASE_URL, { dialect: 'postgres', logging: false });
+} else {
+    // fallback to sqlite file to allow local dev without a Postgres URL
+    sequelize = new Sequelize({ dialect: 'sqlite', storage: './dev.sqlite', logging: false });
+}
 const SequelizeStore = connectSessionSequelize(session.Store);
 const store = new SequelizeStore({ db: sequelize });
 

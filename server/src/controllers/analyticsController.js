@@ -44,7 +44,7 @@ export const getDailyPatients = async (req, res) => {
     try {
         const { days = 7 } = req.query;
         const startDate = new Date();
-        startDate.setDate(startDate.getDate() - parseInt(days));
+    startDate.setDate(startDate.getDate() - parseInt(days, 10));
 
         const dailyData = await prisma.patient.groupBy({
             by: ['createdAt'],

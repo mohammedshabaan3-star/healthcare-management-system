@@ -4,6 +4,7 @@ import api from '../../utils/api';
 const ReportsManagement = () => {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
+    const currentRole = JSON.parse(localStorage.getItem('user') || 'null')?.activeRole;
 
     useEffect(() => {
         fetchReports();
@@ -22,6 +23,15 @@ const ReportsManagement = () => {
 
     if (loading) {
         return <div style={{ padding: '20px', textAlign: 'center' }}>⏳ جارٍ التحميل...</div>;
+    }
+
+    // Only system_admin, hospital_admin and data_officer can view reports
+    if (!['system_admin', 'hospital_admin', 'data_officer'].includes(currentRole)) {
+        return (
+            <div style={{ padding: '20px', direction: 'rtl', textAlign: 'center' }}>
+                <h3>غير مصرح بالوصول إلى هذه الصفحة</h3>
+            </div>
+        );
     }
 
     return (

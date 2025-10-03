@@ -5,7 +5,16 @@ const prisma = new PrismaClient();
 // ✅ جلب جميع المرضى
 export const getPatients = async (req, res) => {
     try {
+        let where = {};
+        // إذا كان المستخدم ليس مدير النظام، يعرض فقط المرضى المرتبطين بمستشفاه
+        if (['doctor', 'nurse', 'hospital_admin'].includes(req.session.userRole)) {
+            if (!req.session.hospitalId) {
+                return res.status(403).json({ error: 'لا توجد صلاحية مستشفى للمستخدم.' });
+            }
+            where = { hospitalId: req.session.hospitalId };
+        }
         const patients = await prisma.patient.findMany({
+            where,
             include: { hospital: true }
         });
         res.json(patients);
@@ -24,6 +33,12 @@ export const createPatient = async (req, res) => {
     }
 
     try {
+        // تحقق من صلاحية المستشفى
+        if (['doctor', 'nurse', 'hospital_admin'].includes(req.session.userRole)) {
+            if (Number(hospitalId) !== req.session.hospitalId) {
+                return res.status(403).json({ error: 'لا يمكنك إضافة مريض لمستشفى آخر.' });
+            }
+        }
         const patient = await prisma.patient.create({
             data: {
                 name,
@@ -45,6 +60,16 @@ export const updatePatient = async (req, res) => {
     const { name, nationalId, phone, hospitalId } = req.body;
 
     try {
+        // تحقق من صلاحية المستشفى
+        const patientData = await prisma.patient.findUnique({ where: { id: Number(id) } });
+        if (!patientData) {
+            return res.status(404).json({ error: 'المريض غير موجود' });
+        }
+        if (['doctor', 'nurse', 'hospital_admin'].includes(req.session.userRole)) {
+            if (patientData.hospitalId !== req.session.hospitalId) {
+                return res.status(403).json({ error: 'لا يمكنك تعديل بيانات مريض من مستشفى آخر.' });
+            }
+        }
         const patient = await prisma.patient.update({
             where: { id: Number(id) },
             data: {
@@ -66,6 +91,16 @@ export const deletePatient = async (req, res) => {
     const { id } = req.params;
 
     try {
+        // تحقق من صلاحية المستشفى
+        const patientData = await prisma.patient.findUnique({ where: { id: Number(id) } });
+        if (!patientData) {
+            return res.status(404).json({ error: 'المريض غير موجود' });
+        }
+        if (['doctor', 'nurse', 'hospital_admin'].includes(req.session.userRole)) {
+            if (patientData.hospitalId !== req.session.hospitalId) {
+                return res.status(403).json({ error: 'لا يمكنك حذف مريض من مستشفى آخر.' });
+            }
+        }
         await prisma.patient.delete({
             where: { id: Number(id) }
         });

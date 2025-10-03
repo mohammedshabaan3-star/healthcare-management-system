@@ -58,7 +58,7 @@ export const updateRole = async (req, res) => {
   const { name, displayName, description, permissions } = req.body;
 
   try {
-    const role = await prisma.role.findUnique({ where: { id: parseInt(id) } });
+  const role = await prisma.role.findUnique({ where: { id: parseInt(id, 10) } });
     if (!role) {
       return res.status(404).json({ error: 'الدور غير موجود' });
     }
@@ -67,7 +67,7 @@ export const updateRole = async (req, res) => {
     const parsedPermissions = typeof permissions === 'object' ? permissions : role.permissions;
 
     const updatedRole = await prisma.role.update({
-      where: { id: parseInt(id) },
+      where: { id: parseInt(id, 10) },
       data: {
         name: name || role.name,
         displayName: displayName || role.displayName,
@@ -88,12 +88,12 @@ export const deleteRole = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const role = await prisma.role.findUnique({ where: { id: parseInt(id) } });
+  const role = await prisma.role.findUnique({ where: { id: parseInt(id, 10) } });
     if (!role) {
       return res.status(404).json({ error: 'الدور غير موجود' });
     }
 
-    await prisma.role.delete({ where: { id: parseInt(id) } });
+  await prisma.role.delete({ where: { id: parseInt(id, 10) } });
 
     res.json({ success: true, message: 'تم حذف الدور بنجاح' });
   } catch (error) {

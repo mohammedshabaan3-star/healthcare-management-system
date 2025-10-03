@@ -1,6 +1,6 @@
 // client/src/modules/patients/PatientRegistrationForm.js
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../utils/api';
 
 const PatientRegistrationForm = () => {
     const [formData, setFormData] = useState({
@@ -53,13 +53,12 @@ const PatientRegistrationForm = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const token = localStorage.getItem('token');
                 const [govRes, hospRes, diagRes, careRes, icuRes] = await Promise.all([
-                    axios.get('http://localhost:5000/api/governorates', { headers: { Authorization: `Bearer ${token}` } }),
-                    axios.get('http://localhost:5000/api/hospitals', { headers: { Authorization: `Bearer ${token}` } }),
-                    axios.get('http://localhost:5000/api/diagnoses', { headers: { Authorization: `Bearer ${token}` } }),
-                    axios.get('http://localhost:5000/api/care-types', { headers: { Authorization: `Bearer ${token}` } }),
-                    axios.get('http://localhost:5000/api/icu-classes', { headers: { Authorization: `Bearer ${token}` } })
+                    api.get('/governorates'),
+                    api.get('/hospitals'),
+                    api.get('/diagnoses'),
+                    api.get('/care-types'),
+                    api.get('/icu-classes')
                 ]);
                 setGovernorates(govRes.data.map(g => g.name));
                 setHospitals(hospRes.data.map(h => h.name));
@@ -116,10 +115,7 @@ const PatientRegistrationForm = () => {
         setMessage('');
 
         try {
-            const token = localStorage.getItem('token');
-            const response = await axios.post('http://localhost:5000/api/patients', formData, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.post('/patients', formData);
 
             setMessage('✅ تم تسجيل المريض بنجاح' + (formData.directTransfer ? ' وتم إرسال طلب التحويل للموافقة' : ''));
             

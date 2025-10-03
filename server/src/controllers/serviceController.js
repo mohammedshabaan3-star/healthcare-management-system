@@ -41,7 +41,7 @@ export const createService = async (req, res) => {
         };
 
         const service = await prisma.service.create({
-             serviceData
+            data: serviceData
         });
 
         res.status(201).json({
@@ -65,7 +65,7 @@ export const updateService = async (req, res) => {
         // التحقق من تفرد الكود (إذا تم تغييره)
         if (code) {
             const existingService = await prisma.service.findFirst({
-                where: { code, NOT: { id: parseInt(id) } }
+                where: { code, NOT: { id: parseInt(id, 10) } }
             });
             if (existingService) {
                 return res.status(400).json({ error: 'كود الخدمة موجود مسبقًا' });
@@ -82,8 +82,8 @@ export const updateService = async (req, res) => {
         };
 
         const service = await prisma.service.update({
-            where: { id: parseInt(id) },
-             serviceData
+            where: { id: parseInt(id, 10) },
+            data: serviceData
         });
 
         res.json({
@@ -104,7 +104,7 @@ export const deleteService = async (req, res) => {
 
     try {
         await prisma.service.delete({
-            where: { id: parseInt(id) }
+            where: { id: parseInt(id, 10) }
         });
 
         res.json({
@@ -123,7 +123,7 @@ export const toggleServiceStatus = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const service = await prisma.service.findUnique({ where: { id: parseInt(id) } });
+    const service = await prisma.service.findUnique({ where: { id: parseInt(id, 10) } });
         if (!service) {
             return res.status(404).json({ error: 'الخدمة غير موجودة' });
         }
@@ -134,8 +134,8 @@ export const toggleServiceStatus = async (req, res) => {
         };
 
         const updatedService = await prisma.service.update({
-            where: { id: parseInt(id) },
-             serviceData
+            where: { id: parseInt(id, 10) },
+            data: serviceData
         });
 
         res.json({
