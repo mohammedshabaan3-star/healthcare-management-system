@@ -32,9 +32,10 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ CORS مع السماح بالكوكيز
+// CORS origin configurable
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: CLIENT_ORIGIN,
     credentials: true
 }));
 
@@ -45,7 +46,12 @@ app.use(cookieParser());
 // otherwise fall back to a lightweight sqlite DB for local development.
 let sequelize;
 if (process.env.DATABASE_URL) {
-    sequelize = new Sequelize(process.env.DATABASE_URL, { dialect: 'postgres', logging: false });
+    const sequelizeOptions = { dialect: 'postgres', logging: false };
+    // support optional SSL for hosted Postgres (e.g., Heroku)
+    if (process.env.DATABASE_SSL === 'true' || process.env.NODE_ENV === 'production') {
+        sequelizeOptions.dialectOptions = { ssl: { require: true, rejectUnauthorized: false } };
+    }
+    sequelize = new Sequelize(process.env.DATABASE_URL, sequelizeOptions);
 } else {
     // fallback to sqlite file to allow local dev without a Postgres URL
     sequelize = new Sequelize({ dialect: 'sqlite', storage: './dev.sqlite', logging: false });
@@ -59,15 +65,14 @@ app.use(session({
     saveUninitialized: false,
     store,
     cookie: {
-        secure: false,
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         sameSite: 'lax',
         maxAge: 24*60*60*1000
     }
 }));
-store.sync();
 
-// ✅ Routes
+// ✅ Routes (registered before server start)
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/hospitals', hospitalRoutes);
@@ -86,9 +91,39 @@ app.use('/api/diagnoses', diagnosesRoutes);
 
 app.get('/health', (req,res) => res.json({ status:'OK', message:'Healthcare System running!' }));
 
-app.listen(PORT, async () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    await createAdminUserIfNotExists();
-    await seedGovernoratesAndDistricts();
-    await seedHospitals();
-});
+// Start-up sequence: authenticate DB, sync session store, run seeders (log errors but don't crash)
+async function init() {
+    try {
+        await sequelize.authenticate();
+        console.log('✅ Database connection authenticated.');
+
+        // Sync session store table (do not force drop)
+        await store.sync();
+        console.log('✅ Session store synced.');
+
+        // Start listening only after DB and session store are ready
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+        });
+
+        // Run seeders but don't let a failing seeder crash the server
+        try {
+            await createAdminUserIfNotExists();
+            await seedGovernoratesAndDistricts();
+            try {
+                await seedHospitals();
+            } catch (e) {
+                console.error('⚠️ seedHospitals failed (non-fatal):', e.message || e);
+            }
+        } catch (seedErr) {
+            console.error('⚠️ Seeder error (non-fatal):', seedErr.message || seedErr);
+        }
+    } catch (err) {
+        console.error('❌ Failed to initialize application:', err.message || err);
+        process.exit(1);
+    }
+}
+
+init();
+
+export default app;

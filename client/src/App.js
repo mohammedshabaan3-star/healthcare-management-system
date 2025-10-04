@@ -35,22 +35,52 @@ const futureConfig = {
 };
 
 const App = () => {
-    const [user, setUser] = useState(null);
+    // try to get a cached minimal user to avoid UI flicker while we validate the session
+    const getCachedUser = () => {
+        try {
+            const raw = localStorage.getItem('user');
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            // keep only a minimal safe subset
+            return {
+                id: parsed.id,
+                name: parsed.name,
+                email: parsed.email,
+                activeRole: parsed.activeRole,
+                hospitalId: parsed.hospitalId
+            };
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const [user, setUser] = useState(getCachedUser());
     const [loading, setLoading] = useState(true);
+    const [authError, setAuthError] = useState(null);
 
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const response = await api.get('/auth/check', { withCredentials: true });
+                setAuthError(null);
+                const response = await api.get('/auth/check');
                 if (response.data?.user) {
-                    setUser(response.data.user);
-                    localStorage.setItem('user', JSON.stringify(response.data.user));
+                    const safeUser = {
+                        id: response.data.user.id,
+                        name: response.data.user.name,
+                        email: response.data.user.email,
+                        activeRole: response.data.user.activeRole,
+                        hospitalId: response.data.user.hospitalId
+                    };
+                    setUser(safeUser);
+                    localStorage.setItem('user', JSON.stringify(safeUser));
                 } else {
                     setUser(null);
                     localStorage.removeItem('user');
                 }
             } catch (error) {
+                // Network / server errors should be visible to the developer and optionally to users
                 console.error("فشل في التحقق من الجلسة:", error);
+                setAuthError(error?.message || 'Network error');
                 setUser(null);
                 localStorage.removeItem('user');
             } finally {
@@ -60,19 +90,33 @@ const App = () => {
         checkAuth();
     }, []);
 
-    const hasRole = (allowedRoles) => user && allowedRoles.includes(user.activeRole);
+    const hasRole = (allowedRoles) => {
+        if (!user || !user.activeRole) return false;
+        if (!allowedRoles) return true;
+        // normalize to array
+        const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+        return roles.includes(user.activeRole);
+    };
 
     const ProtectedRoute = ({ children, allowedRoles }) => {
         if (loading) return <div style={{ padding: 20, textAlign: 'center' }}>جارٍ التحميل...</div>;
-        if (!user) return <Navigate to="/login" />;
-        if (allowedRoles && !hasRole(allowedRoles)) return <Navigate to="/dashboard" />;
+        if (!user) return <Navigate to="/login" replace />;
+        if (allowedRoles && !hasRole(allowedRoles)) return <Navigate to="/dashboard" replace />;
         return children;
     };
 
     if (loading) return <div style={{ padding: 20, textAlign: 'center' }}>جارٍ التحميل...</div>;
 
+    // show a small banner if auth check failed due to network/server error
+    const AuthErrorBanner = () => authError ? (
+        <div style={{ background: '#ffe6e6', color: '#800', padding: 10, textAlign: 'center' }}>
+            فشل في التحقق من الجلسة: {authError}. تأكد من تشغيل الخادم وكونه متاحًا على {process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}.
+        </div>
+    ) : null;
+
     return (
         <Router future={futureConfig}>
+            <AuthErrorBanner />
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
