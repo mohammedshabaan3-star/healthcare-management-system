@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticateSession, authorizeRole } from '../middleware/auth.js';
-import { uploadGovernorates, uploadHospitals } from '../controllers/uploadController.js';
+import { uploadGovernorates, uploadHospitals, uploadPatients } from '../controllers/uploadController.js';
 import { upload } from '../middleware/fileUpload.js';
 
 const router = express.Router();
@@ -21,6 +21,19 @@ router.post(
   authorizeRole('system_admin'),
   upload.single('file'),
   uploadHospitals
+);
+
+// ✅ رفع ملف المرضى - مسموح فقط لمدير النظام
+router.post(
+  '/patients',
+  authenticateSession,
+  authorizeRole('system_admin'),
+  // يقبل ملف excel واحد ومجموعة مرفقات باسم attachments
+  upload.fields([
+    { name: 'file', maxCount: 1 },
+    { name: 'attachments', maxCount: 50 }
+  ]),
+  uploadPatients
 );
 
 export default router;

@@ -2,15 +2,23 @@
 import multer from 'multer';
 import path from 'path';
 
-// إعداد تخزين الملفات في الذاكرة (لأننا نعالجها مباشرة)
+// إعداد تخزين الملفات في الذاكرة (نعالج الملفات فورًا ونكتب المرفقات إلى القرص يدويًا)
 const storage = multer.memoryStorage();
 
+const allowedMimeTypes = new Set([
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-excel',
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+    'image/jpg'
+]);
+
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-        file.mimetype === 'application/vnd.ms-excel') {
+    if (allowedMimeTypes.has(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('يجب أن يكون الملف من نوع Excel'), false);
+        cb(new Error('نوع الملف غير مدعوم. مسموح: Excel, PDF, PNG, JPG'), false);
     }
 };
 
@@ -18,6 +26,7 @@ export const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB كحد أقصى
+        // زيادة الحد للسماح بمرفقات أكبر قليلاً
+        fileSize: 20 * 1024 * 1024 // 20MB كحد أقصى لكل ملف
     }
 });
