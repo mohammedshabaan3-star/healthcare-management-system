@@ -54,11 +54,11 @@ const PatientRegistrationForm = () => {
         const fetchData = async () => {
             try {
                 const [govRes, hospRes, diagRes, careRes, icuRes] = await Promise.all([
-                    api.get('/governorates'),
-                    api.get('/hospitals'),
-                    api.get('/diagnoses'),
-                    api.get('/care-types'),
-                    api.get('/icu-classes')
+                    api.get('/governorates', { withCredentials: true }),
+                    api.get('/hospitals', { withCredentials: true }),
+                    api.get('/diagnoses', { withCredentials: true }),
+                    api.get('/care-types', { withCredentials: true }),
+                    api.get('/icu-classes', { withCredentials: true })
                 ]);
                 setGovernorates(govRes.data.map(g => g.name));
                 setHospitals(hospRes.data.map(h => h.name));
@@ -68,6 +68,7 @@ const PatientRegistrationForm = () => {
                 setLoading(false);
             } catch (error) {
                 console.error('فشل في جلب البيانات:', error);
+                setMessage('حدث خطأ أثناء جلب البيانات. يرجى المحاولة مرة أخرى.');
                 setLoading(false);
             }
         };

@@ -29,6 +29,11 @@ import ReportsManagement from './modules/admin/ReportsManagement';
 import ActivityLog from './modules/admin/ActivityLog';
 import PerformanceReports from './modules/admin/PerformanceReports';
 
+const futureConfig = {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true
+};
+
 const App = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -67,7 +72,7 @@ const App = () => {
     if (loading) return <div style={{ padding: 20, textAlign: 'center' }}>جارٍ التحميل...</div>;
 
     return (
-        <Router>
+        <Router future={futureConfig}>
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />

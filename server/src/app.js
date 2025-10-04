@@ -19,6 +19,9 @@ import standardRoutes from './routes/standardRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import roleRoutes from './routes/roleRoutes.js';
+import careTypesRoutes from './routes/careTypesRoutes.js';
+import icuClassesRoutes from './routes/icuClassesRoutes.js';
+import diagnosesRoutes from './routes/diagnosesRoutes.js';
 
 // Seeds
 import { seedGovernoratesAndDistricts } from './services/seedGovernorates.js';
@@ -77,6 +80,9 @@ app.use('/api/standards', standardRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
+app.use('/api/care-types', careTypesRoutes);
+app.use('/api/icu-classes', icuClassesRoutes);
+app.use('/api/diagnoses', diagnosesRoutes);
 
 app.get('/health', (req,res) => res.json({ status:'OK', message:'Healthcare System running!' }));
 

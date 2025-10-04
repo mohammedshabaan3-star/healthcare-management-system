@@ -4,7 +4,8 @@ import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
     const location = useLocation();
-    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    let user = null;
+    try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch (e) { user = null; }
     const role = user?.activeRole || null;
 
     const isActive = (path) => location.pathname === path;
@@ -14,7 +15,6 @@ const Sidebar = () => {
             { path: '/dashboard', label: '📊 لوحة التحكم', icon: '📊' }
         ];
 
-        // show patients and register options to roles that need them
         if (['system_admin', 'hospital_admin', 'doctor', 'nurse'].includes(role)) {
             items.push({ path: '/patients', label: '👥 المرضى', icon: '👥' });
             items.push({ path: '/patients/register', label: '➕ تسجيل مريض جديد', icon: '➕' });
@@ -41,7 +41,9 @@ const Sidebar = () => {
         }}>
             <div style={{ textAlign: 'center', padding: '20px 0', borderBottom: '1px solid #34495e', marginBottom: '30px' }}>
                 <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 'bold' }}>🏥 نظام إدارة الرعاية الصحية</h3>
-                <p style={{ margin: '10px 0 0 0', fontSize: '14px', opacity: 0.8 }}>{user.name} - {getRoleLabel(role)}</p>
+                <p style={{ margin: '10px 0 0 0', fontSize: '14px', opacity: 0.8 }}>
+                    {user ? `${user.name} - ${getRoleLabel(role)}` : 'مستخدم غير مسجل الدخول'}
+                </p>
             </div>
 
             <nav>
@@ -65,20 +67,17 @@ const Sidebar = () => {
                             </Link>
                         </li>
                     ))}
-
-                    <li style={{ marginBottom: '10px' }}>
-                        <Link to="/change-password" style={{ display: 'block', padding: '12px 18px', color: 'white', textDecoration: 'none', borderRadius: '8px', fontSize: '15px' }}>
-                            🔒 تغيير كلمة المرور
-                        </Link>
-                    </li>
                 </ul>
             </nav>
 
             <div style={{ position: 'absolute', bottom: '20px', width: '100%', textAlign: 'center', borderTop: '1px solid #34495e', paddingTop: '15px', fontSize: '13px' }}>
+                <Link to="/change-password" style={{ display: 'block', padding: '12px 18px', color: 'white', textDecoration: 'none', borderRadius: '8px', fontSize: '15px' }}>
+                    🔒 تغيير كلمة المرور
+                </Link>
+
                 <button
                     onClick={async () => {
                         try {
-                            // call server to destroy session
                             await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
                         } catch (e) {
                             console.warn('Logout request failed, clearing client state anyway.');
@@ -90,15 +89,16 @@ const Sidebar = () => {
                 >
                     🚪 تسجيل الخروج
                 </button>
+
                 <p style={{ marginTop: '12px', opacity: 0.7 }}>نظام إدارة الرعاية الصحية</p>
                 <p style={{ margin: 0, opacity: 0.7 }}>© {new Date().getFullYear()}</p>
             </div>
         </div>
     );
-}
+};
 
 function getRoleLabel(role) {
-    switch(role) {
+    switch (role) {
         case 'system_admin': return 'مدير النظام';
         case 'hospital_admin': return 'مدير مستشفى';
         case 'doctor': return 'طبيب';

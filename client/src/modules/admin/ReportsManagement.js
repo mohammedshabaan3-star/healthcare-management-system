@@ -12,10 +12,11 @@ const ReportsManagement = () => {
 
     const fetchReports = async () => {
         try {
-            const response = await api.get('/analytics/reports');
+            const response = await api.get('/analytics/reports', { withCredentials: true });
             setReports(response.data);
         } catch (error) {
             console.error('فشل في جلب التقارير:', error);
+            setReports([]);
         } finally {
             setLoading(false);
         }

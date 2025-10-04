@@ -13,7 +13,7 @@ const MedicalStandardsManagement = () => {
 
     const fetchStandards = async () => {
         try {
-            const res = await api.get('/standards');
+            const res = await api.get('/standards', { withCredentials: true });
             setStandards(res.data || []);
         } catch (err) {
             console.error('fetch standards error', err);
@@ -33,8 +33,11 @@ const MedicalStandardsManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            if (editingStandard) await api.put(`/standards/${editingStandard.id}`, formData);
-            else await api.post('/standards', formData);
+            if (editingStandard) {
+                await api.put(`/standards/${editingStandard.id}`, formData, { withCredentials: true });
+            } else {
+                await api.post('/standards', formData, { withCredentials: true });
+            }
             setMessage('تم الحفظ');
             setShowAddModal(false);
             setEditingStandard(null);
@@ -53,13 +56,22 @@ const MedicalStandardsManagement = () => {
 
     const handleDelete = async (id) => {
         if (!window.confirm('هل أنت متأكد؟')) return;
-        try { await api.delete(`/standards/${id}`); setMessage('تم الحذف'); fetchStandards(); }
-        catch (err) { setMessage(err.response?.data?.error || err.message || 'خطأ'); }
+        try {
+            await api.delete(`/standards/${id}`, { withCredentials: true });
+            setMessage('تم الحذف');
+            fetchStandards();
+        } catch (err) {
+            setMessage(err.response?.data?.error || err.message || 'خطأ');
+        }
     };
 
     const handleToggleStatus = async (standard) => {
-        try { await api.patch(`/standards/${standard.id}/toggle-status`); fetchStandards(); }
-        catch (err) { setMessage(err.response?.data?.error || err.message || 'خطأ'); }
+        try {
+            await api.patch(`/standards/${standard.id}/toggle-status`, null, { withCredentials: true });
+            fetchStandards();
+        } catch (err) {
+            setMessage(err.response?.data?.error || err.message || 'خطأ');
+        }
     };
 
     const getCategoryLabel = (category) => {

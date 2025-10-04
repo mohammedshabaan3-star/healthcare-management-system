@@ -23,11 +23,12 @@ const MedicalServicesManagement = () => {
 
     const fetchServices = async () => {
         try {
-            const response = await api.get('/services');
+            const response = await api.get('/services', { withCredentials: true });
             setServices(response.data);
             setLoading(false);
         } catch (error) {
             console.error('فشل في جلب الخدمات:', error);
+            setMessage('حدث خطأ أثناء جلب الخدمات. يرجى المحاولة مرة أخرى.');
             setLoading(false);
         }
     };
@@ -43,10 +44,10 @@ const MedicalServicesManagement = () => {
             let response;
 
             if (editingService) {
-                response = await api.put(`/services/${editingService.id}`, formData);
+                response = await api.put(`/services/${editingService.id}`, formData, { withCredentials: true });
                 setMessage('✅ تم تحديث الخدمة بنجاح');
             } else {
-                response = await api.post('/services', formData);
+                response = await api.post('/services', formData, { withCredentials: true });
                 setMessage('✅ تم إضافة الخدمة بنجاح');
             }
 
@@ -55,7 +56,8 @@ const MedicalServicesManagement = () => {
             setFormData({ name: '', code: '', type: 'medical', description: '' });
             fetchServices();
         } catch (error) {
-            setMessage(`❌ فشل في ${editingService ? 'تحديث' : 'إضافة'} الخدمة: ${error.response?.data?.error || error.message}`);
+            console.error('فشل في حفظ الخدمة:', error);
+            setMessage('حدث خطأ أثناء حفظ الخدمة. يرجى المحاولة مرة أخرى.');
         }
     };
 
